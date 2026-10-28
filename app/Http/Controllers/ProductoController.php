@@ -32,6 +32,7 @@ class ProductoController extends Controller
         ]);
     }
 
+    // Mostrar productos, buscar, filtrar y paginar.
     public function index(Request $request)
     {
         $productos = $this->obtenerProductos();
@@ -39,6 +40,7 @@ class ProductoController extends Controller
         $buscar = $request->query('buscar', '');
         $categoria = $request->query('categoria', '');
 
+        // Aplicar búsqueda y filtro por categoría.
         $productos = array_filter(
             $productos,
             function ($producto) use ($buscar, $categoria) {
@@ -54,18 +56,48 @@ class ProductoController extends Controller
             }
         );
 
+        // Configurar la paginación.
+        $porPagina = 3;
+        $totalProductos = count($productos);
+
+        $totalPaginas = max(
+            1,
+            (int) ceil($totalProductos / $porPagina)
+        );
+
+        $pagina = max(
+            1,
+            (int) $request->query('page', 1)
+        );
+
+        // Mantener la página dentro del rango disponible.
+        $pagina = min($pagina, $totalPaginas);
+
+        // Obtener únicamente los productos de la página actual.
+        $productosPagina = array_slice(
+            $productos,
+            ($pagina - 1) * $porPagina,
+            $porPagina,
+            true
+        );
+
         return view('productos.index', [
-            'productos' => $productos,
+            'productos' => $productosPagina,
             'buscar' => $buscar,
             'categoria' => $categoria,
+            'pagina' => $pagina,
+            'totalPaginas' => $totalPaginas,
+            'totalProductos' => $totalProductos,
         ]);
     }
 
+    // Mostrar formulario de registro.
     public function create()
     {
         return view('productos.create');
     }
 
+    // Registrar un producto (POST).
     public function store(Request $request)
     {
         $datos = $request->validate([
@@ -89,6 +121,7 @@ class ProductoController extends Controller
             ->with('ok', 'Producto registrado correctamente.');
     }
 
+    // Mostrar formulario de edición.
     public function edit(string $id)
     {
         $productos = $this->obtenerProductos();
@@ -101,6 +134,7 @@ class ProductoController extends Controller
         ]);
     }
 
+    // Actualizar un producto (PUT).
     public function update(Request $request, string $id)
     {
         $productos = $this->obtenerProductos();
@@ -122,6 +156,7 @@ class ProductoController extends Controller
             ->with('ok', 'Producto actualizado correctamente.');
     }
 
+    // Eliminar un producto (DELETE).
     public function destroy(string $id)
     {
         $productos = $this->obtenerProductos();
